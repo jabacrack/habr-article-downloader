@@ -10,6 +10,86 @@ if (typeof browser !== 'undefined' && browser.runtime?.id) {
   let lastPath = location.pathname;
   let feedObserver = null;
   let syncTimer = null;
+  let joplinPanel = null;
+
+  function closeJoplinPanel() {
+    if (!joplinPanel) return;
+    const { panel, button, cleanup } = joplinPanel;
+    cleanup();
+    panel.remove();
+    button.setAttribute('aria-expanded', 'false');
+    joplinPanel = null;
+  }
+
+  function openJoplinPanel(button) {
+    const sameButton = joplinPanel?.button === button;
+    closeJoplinPanel();
+    if (sameButton) return;
+    const panel = document.createElement('div');
+    panel.className = 'habr-joplin-panel';
+    panel.style.visibility = 'hidden';
+    button.textContent = 'Загрузка…';
+    button.setAttribute('aria-busy', 'true');
+    panel.setAttribute('popover', 'manual');
+    const frame = document.createElement('iframe');
+    frame.title = 'Сохранить статью в Joplin';
+    frame.src = chrome.runtime.getURL(`joplin.html?compact=1&url=${encodeURIComponent(button.dataset.url)}`);
+    panel.append(frame);
+    document.body.append(panel);
+    const position = () => {
+      if (!button.isConnected) { closeJoplinPanel(); return; }
+      const rect = button.getBoundingClientRect();
+      const width = Math.min(340, window.innerWidth - 16);
+      const height = 260;
+      panel.style.width = `${width}px`;
+      panel.style.left = `${Math.max(8, Math.min(rect.right - width, window.innerWidth - width - 8))}px`;
+      const below = rect.bottom + 6;
+      const top = below + height <= window.innerHeight - 8 ? below : rect.top - height - 6;
+      panel.style.top = `${Math.max(8, Math.min(top, window.innerHeight - height - 8))}px`;
+    };
+    const outside = event => {
+      if (!panel.contains(event.target) && !button.contains(event.target)) closeJoplinPanel();
+    };
+    const escape = event => { if (event.key === 'Escape') closeJoplinPanel(); };
+    const loadTimeout = setTimeout(() => {
+      closeJoplinPanel();
+      showToast(button, 'Не удалось загрузить статью. Попробуйте ещё раз.', 'error');
+    }, 45000);
+    const message = event => {
+      if (event.source !== frame.contentWindow || event.origin !== chrome.runtime.getURL('').replace(/\/$/, '')) return;
+      if (event.data?.type === 'HABR_JOPLIN_READY') {
+        clearTimeout(loadTimeout);
+        position();
+        // Reveal only after the iframe has filled in the article title.
+        panel.style.visibility = 'visible';
+        panel.showPopover?.();
+        button.textContent = 'В Joplin';
+        button.removeAttribute('aria-busy');
+        button.setAttribute('aria-expanded', 'true');
+      }
+      if (event.data?.type === 'HABR_JOPLIN_ERROR') {
+        closeJoplinPanel();
+        showToast(button, event.data.error || 'Не удалось загрузить статью.', 'error');
+      }
+      if (event.data?.type === 'HABR_JOPLIN_CLOSE') { closeJoplinPanel(); button.focus(); }
+    };
+    joplinPanel = { panel, button, cleanup() {
+      clearTimeout(loadTimeout);
+      button.textContent = 'В Joplin';
+      button.removeAttribute('aria-busy');
+      document.removeEventListener('pointerdown', outside);
+      document.removeEventListener('keydown', escape);
+      window.removeEventListener('message', message);
+      window.removeEventListener('resize', position);
+      window.removeEventListener('scroll', position, true);
+    } };
+    document.addEventListener('pointerdown', outside);
+    document.addEventListener('keydown', escape);
+    window.addEventListener('message', message);
+    window.addEventListener('resize', position);
+    window.addEventListener('scroll', position, true);
+    position();
+  }
 
   function scheduleSync(delay = 400) {
     clearTimeout(syncTimer);
@@ -165,6 +245,7 @@ if (typeof browser !== 'undefined' && browser.runtime?.id) {
   }
 
   function removeAllButtons() {
+    closeJoplinPanel();
     document.querySelectorAll('.habr-md-btn').forEach((el) => {
       if (!el.dataset.habrMdBusy) el.remove();
     });
@@ -216,8 +297,9 @@ if (typeof browser !== 'undefined' && browser.runtime?.id) {
     if (!host) return;
 
     host.classList.add('habr-md-host');
+    mountJoplinButton(host, url, 'article');
 
-    let btn = host.querySelector('.habr-md-btn--article');
+    let btn = host.querySelector('.habr-md-btn--article:not(.habr-joplin-btn)');
     if (btn) {
       if (!btn.dataset.habrMdBusy) btn.dataset.url = url;
       return;
@@ -240,6 +322,32 @@ if (typeof browser !== 'undefined' && browser.runtime?.id) {
     return null;
   }
 
+  function mountJoplinButton(host, url, variant) {
+    let button = host.querySelector('.habr-joplin-btn');
+    if (button) {
+      button.dataset.url = url;
+      return;
+    }
+    button = document.createElement('button');
+    button.type = 'button';
+    button.className = `habr-md-btn habr-md-btn--${variant} habr-joplin-btn`;
+    button.textContent = 'В Joplin';
+    button.title = 'Сохранить статью в блокнот Joplin';
+    button.dataset.url = url;
+    button.setAttribute('aria-haspopup', 'dialog');
+    button.setAttribute('aria-expanded', 'false');
+    button.addEventListener('click', async event => {
+      event.preventDefault();
+      event.stopPropagation();
+      try {
+        openJoplinPanel(button);
+      } catch (err) {
+        showToast(button, err.message, 'error');
+      }
+    });
+    host.insertBefore(button, host.firstChild);
+  }
+
   function injectFeedButtons() {
     if (!fabEnabled || !isFeedPage()) return;
 
@@ -249,8 +357,9 @@ if (typeof browser !== 'undefined' && browser.runtime?.id) {
 
       const host = card.querySelector('.article-snippet') || card;
       host.classList.add('habr-md-host');
+      mountJoplinButton(host, url, 'feed');
 
-      let btn = host.querySelector('.habr-md-btn--feed');
+      let btn = host.querySelector('.habr-md-btn--feed:not(.habr-joplin-btn)');
       if (btn) {
         if (!btn.dataset.habrMdBusy) btn.dataset.url = url;
         return;
@@ -331,7 +440,7 @@ if (typeof browser !== 'undefined' && browser.runtime?.id) {
     feedObserver.observe(root, { childList: true, subtree: true });
   }
 
-  chrome.storage.local.get(['showFloatingButton'], (data) => {
+  chrome.storage.local.get(['showFloatingButton']).then((data) => {
     fabEnabled = data.showFloatingButton !== false;
     syncUi();
     watchRouteChanges();

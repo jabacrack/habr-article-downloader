@@ -403,6 +403,7 @@ const HabrParser = (() => {
     return {
       success: true,
       markdown,
+      body: bodyMd,
       filename,
       articleId,
       publicationKey: getPublicationKey(pageUrl),
@@ -484,6 +485,7 @@ const HabrParser = (() => {
     return {
       success: true,
       markdown,
+      body: bodyMd,
       filename: safeFilename(meta.title, meta.articleId),
       articleId: meta.articleId,
       publicationKey: getPublicationKey(pageUrl),

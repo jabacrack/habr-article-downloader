@@ -15,6 +15,7 @@ if (typeof importScripts === 'function') {
     'utils/rss.js',
     'utils/journal.js',
     'utils/filename.js',
+    'utils/joplin.js',
     'markdown.js',
     'parser.js',
     'filters.js',
@@ -109,6 +110,48 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   (async () => {
     try {
       switch (message.type) {
+        case 'JOPLIN_OPEN': {
+          let query = '';
+          if (message.url) {
+            const url = new URL(message.url);
+            if (url.origin !== 'https://habr.com' || !HabrParser.normalizePublicationUrl(url.href)) {
+              throw new Error('Некорректный URL публикации Habr');
+            }
+            query = `?url=${encodeURIComponent(url.href)}`;
+          }
+          await chrome.windows.create({ url: chrome.runtime.getURL(`joplin.html${query}`), type: 'popup', width: 540, height: 650 });
+          sendResponse({ success: true });
+          break;
+        }
+        case 'JOPLIN_STATUS':
+          sendResponse({ success: true, ...await HabrJoplin.status() });
+          break;
+        case 'JOPLIN_CONNECT':
+        case 'JOPLIN_AUTH_CHECK':
+        case 'JOPLIN_FOLDERS':
+        case 'JOPLIN_PREPARE':
+        case 'JOPLIN_SAVE': {
+          // Only our extension window can authorize or write notes.
+          if (_sender.url?.split('?')[0] !== chrome.runtime.getURL('joplin.html')) throw new Error('Откройте окно «В Joplin».');
+          if (message.type === 'JOPLIN_CONNECT') {
+            sendResponse({ success: true, ...await HabrJoplin.connect() });
+          } else if (message.type === 'JOPLIN_AUTH_CHECK') {
+            sendResponse({ success: true, ...await HabrJoplin.checkAuth() });
+          } else if (message.type === 'JOPLIN_FOLDERS') {
+            sendResponse({ success: true, folders: await HabrJoplin.folders() });
+          } else if (message.type === 'JOPLIN_PREPARE') {
+            const settings = await HabrCore.getSettings();
+            const includeComments = typeof message.includeComments === 'boolean'
+              ? message.includeComments : settings.downloadComments !== false;
+            const article = await HabrCore.preparePublication(message.url, { ...settings, downloadComments: includeComments });
+            sendResponse({ success: true, title: article.meta.title, body: article.body, url: article.meta.url, includeComments });
+          } else {
+            const url = new URL(message.url);
+            if (url.origin !== 'https://habr.com' || !HabrParser.normalizePublicationUrl(url.href)) throw new Error('Некорректный URL публикации Habr');
+            sendResponse({ success: true, ...await HabrJoplin.save(message) });
+          }
+          break;
+        }
         case 'GET_SETTINGS':
           sendResponse({ success: true, settings: await HabrCore.getSettings() });
           break;

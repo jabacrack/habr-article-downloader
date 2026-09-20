@@ -58,7 +58,7 @@ const HabrCore = (() => {
   }
 
   async function saveSettings(partial) {
-    const payload = { ...partial };
+    const payload = Object.fromEntries(Object.entries(partial).filter(([key]) => Object.hasOwn(DEFAULT_SETTINGS, key)));
     if ('watchMaxPages' in payload) payload.watchMaxPages = normalizeMaxPages(payload);
     await chrome.storage.local.set(payload);
     if ('watchEnabled' in partial || 'watchIntervalMinutes' in partial) {
@@ -374,6 +374,59 @@ const HabrCore = (() => {
     return HabrMarkdown.replaceImageUrls(markdown, urlMap);
   }
 
+  async function preparePublication(url, settings) {
+    const parsedUrl = new URL(url);
+    const normalized = HabrParser.normalizePublicationUrl(url);
+    if (parsedUrl.origin !== 'https://habr.com' || !normalized) {
+      throw new Error('Некорректный URL публикации Habr');
+    }
+    const articleId = HabrParser.getPublicationId(normalized);
+    // Комментарии рендерятся на клиенте — в статичном HTML их нет, только kek-API
+    let apiComments = [];
+    if (settings.downloadComments && articleId) {
+      try {
+        apiComments = await HabrApi.fetchComments(articleId, {
+          limit: settings.commentsLimit || 500,
+        });
+      } catch (err) {
+        if (err?.name === 'RateLimitError') throw err;
+        await HabrJournal.add({
+          action: 'comments', url: normalized, status: 'warn', message: err.message,
+        });
+      }
+    }
+
+    // Основной путь — JSON-API: он не ломается при смене вёрстки.
+    // HTML-парсер остаётся фолбэком, если API недоступен или сменил формат.
+    let article = null;
+    if (settings.useApiParser !== false && articleId) {
+      try {
+        const data = await HabrApi.fetchArticle(articleId);
+        const parsed = HabrParser.extractPublicationFromApi(data, normalized, {
+          includeComments: settings.downloadComments,
+          apiComments,
+        });
+        if (parsed.success) article = parsed;
+      } catch (err) {
+        if (err?.name === 'RateLimitError') throw err;
+        await HabrJournal.add({
+          action: 'parse', url: normalized, status: 'warn',
+          message: `API недоступен, беру HTML: ${err.message}`,
+        });
+      }
+    }
+
+    if (!article) {
+      const html = await HabrFetch.fetchHtml(normalized);
+      article = HabrParser.extractPublicationFromHtml(html, normalized, {
+        includeComments: settings.downloadComments,
+        apiComments,
+      });
+    }
+    if (!article.success) throw new Error(article.error || 'Не удалось прочитать статью');
+    return article;
+  }
+
   async function downloadPublicationByUrl(url, settings, options = {}) {
     const normalized = HabrParser.normalizePublicationUrl(url);
     if (!normalized) {
@@ -401,53 +454,7 @@ const HabrCore = (() => {
     }
 
     try {
-      // Комментарии рендерятся на клиенте — в статичном HTML их нет, только kek-API
-      let apiComments = [];
-      if (settings.downloadComments && articleId) {
-        try {
-          apiComments = await HabrApi.fetchComments(articleId, {
-            limit: settings.commentsLimit || 500,
-          });
-        } catch (err) {
-          if (err?.name === 'RateLimitError') throw err;
-          await HabrJournal.add({
-            action: 'comments', url: normalized, status: 'warn', message: err.message,
-          });
-        }
-      }
-
-      // Основной путь — JSON-API: он не ломается при смене вёрстки.
-      // HTML-парсер остаётся фолбэком, если API недоступен или сменил формат.
-      let article = null;
-      if (settings.useApiParser !== false && articleId) {
-        try {
-          const data = await HabrApi.fetchArticle(articleId);
-          const parsed = HabrParser.extractPublicationFromApi(data, normalized, {
-            includeComments: settings.downloadComments,
-            apiComments,
-          });
-          if (parsed.success) article = parsed;
-        } catch (err) {
-          if (err?.name === 'RateLimitError') throw err;
-          await HabrJournal.add({
-            action: 'parse', url: normalized, status: 'warn',
-            message: `API недоступен, беру HTML: ${err.message}`,
-          });
-        }
-      }
-
-      if (!article) {
-        const html = await HabrFetch.fetchHtml(normalized);
-        article = HabrParser.extractPublicationFromHtml(html, normalized, {
-          includeComments: settings.downloadComments,
-          apiComments,
-        });
-      }
-
-      if (!article.success) {
-        await HabrJournal.add({ action: 'download', url: normalized, status: 'error', message: article.error });
-        return { success: false, url: normalized, articleId, publicationKey, error: article.error };
-      }
+      const article = await preparePublication(normalized, settings);
 
       if (!skipFilters && !HabrFilters.passesFilters(article.meta, normalized, settings, options.preview)) {
         await HabrJournal.add({
@@ -703,6 +710,7 @@ const HabrCore = (() => {
     buildMarkdownDownloadUrl,
     downloadImagesForMarkdown,
     downloadMarkdownToPath,
+    preparePublication,
     downloadPublicationByUrl,
     downloadArticleByUrl: (...args) => downloadPublicationByUrl(...args),
     markDownloaded,

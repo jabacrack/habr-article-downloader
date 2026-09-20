@@ -13,6 +13,11 @@
   "host_permissions": [
     "https://habr.com/*"
   ],
+  "optional_host_permissions": ["http://127.0.0.1/*"],
+  "web_accessible_resources": [{
+    "resources": ["joplin.html"],
+    "matches": ["https://habr.com/*"]
+  }],
   "action": {
     "default_title": "Habr → Markdown",
     "default_popup": "popup.html",
@@ -38,6 +43,7 @@
       "utils/rss.js",
       "utils/journal.js",
       "utils/filename.js",
+      "utils/joplin.js",
       "markdown.js",
       "parser.js",
       "filters.js",

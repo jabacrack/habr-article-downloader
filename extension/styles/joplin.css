@@ -1,0 +1,55 @@
+:root { color-scheme: light dark; font: 15px/1.5 "Segoe UI", system-ui, sans-serif; }
+* { box-sizing: border-box; }
+body { margin: 0; background: #f3f6f8; color: #213442; }
+main { max-width: 620px; padding: 28px; margin: auto; }
+.eyebrow { font-size: 12px; font-weight: 700; letter-spacing: .12em; color: #477b91; }
+h1 { font-size: 26px; margin: 0 0 20px; }
+section { padding: 16px; background: #e5eef3; border-radius: 12px; margin-bottom: 24px; }
+section p:first-child { margin-top: 0; }
+label { display: block; margin: 16px 0 6px; font-weight: 600; }
+input, select, button { font: inherit; border: 1px solid #a6bbc6; border-radius: 7px; padding: 10px 12px; }
+input, select { width: 100%; min-width: 0; background: #fff; color: #213442; }
+button { cursor: pointer; background: #fff; color: #213442; }
+button:disabled { opacity: .55; cursor: default; }
+button:not(:disabled):hover { border-color: #316b84; }
+:focus-visible { outline: 3px solid #73aac2; outline-offset: 2px; }
+.primary { background: #316b84; color: white; border-color: #316b84; }
+.folder-row, .actions { display: flex; gap: 8px; }
+.actions { margin-top: 24px; flex-wrap: wrap; }
+.help { font-size: 13px; color: #576d7a; }
+.comments-option { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 400; }
+.comments-option input { width: 14px; height: 14px; margin: 0; padding: 0; accent-color: #316b84; }
+a { color: #316b84; }
+[role="status"] { overflow-wrap: anywhere; }
+.error { color: #a72626; }
+.success { color: #216d40; }
+[hidden] { display: none !important; }
+.compact { overflow: hidden; }
+.compact body { background: #fff; overflow: hidden; }
+.compact main { padding: 12px; }
+.compact .eyebrow, .compact h1, .compact section, .compact .help, .compact #source { display: none; }
+.compact label { font-size: 12px; line-height: 16px; margin: 0 0 4px; }
+.compact label[for="folder"] { margin-top: 10px; }
+.compact input, .compact select, .compact button { height: 32px; padding: 5px 8px; font-size: 13px; line-height: 20px; }
+.compact .folder-row { gap: 6px; }
+.compact #refresh { width: 32px; flex: 0 0 32px; padding: 4px; font-size: 0; }
+.compact #refresh::after { content: '↻'; font-size: 20px; }
+.compact .actions { margin-top: 12px; gap: 6px; flex-wrap: nowrap; }
+.compact .comments-option { display: flex; margin: 8px 0 0; line-height: 18px; }
+.compact .comments-option input { width: 14px; height: 14px; padding: 0; }
+.compact .actions { margin-top: 8px; }
+.compact #save { flex: 1; }
+.compact #close { font-size: 0; width: 32px; padding: 4px; }
+.compact #close::after { content: '×'; font-size: 20px; }
+.compact #status { margin: 8px 0 0; font-size: 12px; line-height: 16px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+@media (prefers-color-scheme: dark) {
+  .compact body { background: #17232b; }
+  body { background: #17232b; color: #e2ecf2; }
+  section { background: #233641; }
+  input, select, button { background: #17232b; color: #e2ecf2; }
+  .primary { background: #316b84; }
+  a, .eyebrow { color: #8ec6dd; }
+  .help { color: #b0c2cc; }
+  .error { color: #ffabab; }
+  .success { color: #95d9b0; }
+}

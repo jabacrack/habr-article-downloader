@@ -6,6 +6,15 @@ if (typeof browser !== 'undefined' && browser.runtime?.id) {
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => [...document.querySelectorAll(sel)];
 
+$('#joplinConnectBtn').addEventListener('click', async () => {
+  try {
+    const result = await chrome.runtime.sendMessage({ type: 'JOPLIN_OPEN' });
+    if (!result?.success) throw new Error(result?.error || 'Не удалось открыть подключение Joplin');
+  } catch (err) {
+    showNotice($('#settingsStatus'), err.message, 'error');
+  }
+});
+
 function showNotice(el, text, type = '') {
   if (!text) {
     el.hidden = true;
