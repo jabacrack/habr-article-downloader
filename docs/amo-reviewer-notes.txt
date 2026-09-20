@@ -1,0 +1,17 @@
+Source/build information for Habr Article Downloader (with Joplin support), version 3.5.0:
+
+We answered Yes to the build-tools question because scripts/package-firefox.ps1 processes manifest.json and generates the Firefox ZIP. Application JavaScript, HTML and CSS are copied unchanged. This packaging step does not minify, transpile or bundle application code and does not use template engines.
+
+The attached source archive includes the extension sources, packaging script, license, tests and BUILD-FIREFOX.md with full build instructions. On Windows with Windows PowerShell 5.1, extract the source archive and run from its root:
+
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/package-firefox.ps1
+
+No dependency installation or network access is required. The result is dist/habr-article-downloader-3.5.0-firefox.zip. ZIP timestamps and JSON object key order may differ; extracted payload files and parsed manifest contents reproduce the submitted package.
+
+Firefox uses an event page and native DOMParser. The Chrome-only DOM shim is excluded from the Firefox package. Readable Turndown and turndown-plugin-gfm files are bundled locally and copied unchanged. No remote executable code, telemetry or developer backend is used.
+
+To test, open a public Habr article and click the .md button, or use the popup batch tab with public Habr article URLs. Personalized feeds require the user's own Habr login; public article downloads do not.
+
+Optional Joplin support requires Joplin Desktop with its Web Clipper service enabled. Connect in the extension settings, grant localhost access, approve in Joplin, then select a notebook and save an article. The local Web Clipper token is stored in local extension storage and excluded from settings exports.
+
+The manifest declares website content, browsing activity and authentication information for functional transfers: Habr requests with existing session credentials, and the article, title, source URL and local token sent to local Joplin. Image downloads may contact image hosts. No browser-wide history is read or uploaded. Private browsing is disabled because the duplicate-prevention journal persists locally. This submission targets Firefox Desktop; Android has not been manually verified.

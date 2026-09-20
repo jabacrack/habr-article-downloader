@@ -18,6 +18,16 @@ Chrome-расширение (Manifest V3), которое сохраняет п�
 
 ## Установка
 
+Firefox: подготовка пакета, проверка и публикация в магазине описаны в [инструкции Firefox Add-ons](docs/firefox-publishing.md).
+
+Подготовить весь комплект для Mozilla (пакет, исходники, инструкции и текст для проверяющего):
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/prepare-firefox-release.ps1
+```
+
+Результаты появятся в `dist/`, версия и название берутся из `extension/manifest.json`. Скрипт проверяет пересборку из архива исходников. Файлы той же версии перезаписываются. Тесты и Mozilla `web-ext lint` запускаются отдельно.
+
 1. Клонируйте репозиторий или скачайте ZIP.
 2. Откройте `chrome://extensions/`.
 3. Включите **Режим разработчика**.

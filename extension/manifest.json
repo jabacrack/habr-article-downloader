@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Habr Article Downloader",
-  "version": "3.4.1",
-  "description": "Скачивает публикации Habr в Markdown: вручную, пакетом, слежением и фильтрами",
+  "name": "Habr Article Downloader (with Joplin support)",
+  "version": "3.4.1.1",
+  "description": "Скачивает публикации Habr в Markdown: вручную, пакетом, слежением и фильтрами. Добавляет возможностью отправить статью в Joplin.",
   "permissions": [
     "downloads",
     "storage",

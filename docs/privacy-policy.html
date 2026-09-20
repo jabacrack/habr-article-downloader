@@ -26,10 +26,11 @@
 <li><strong>Download journal</strong> — a local list of IDs of already-downloaded publications, used only to avoid duplicate downloads. Stored locally.</li>
 <li><strong>Joplin connection</strong> — the local Web Clipper token, pending authorization and last selected notebook are stored locally. The token is excluded from settings exports.</li>
 </ul>
-<p>None of this data ever leaves your device. There are no analytics, no trackers, no external servers, and no accounts.</p>
+<p>These settings and the journal are not uploaded to the developer. There are no analytics or trackers and no developer-operated backend. The extension does not require its own account; a Habr login is needed for personalized feeds.</p>
 
 <h2>Network requests</h2>
 <p>The extension fetches publications and feeds from <strong>habr.com</strong>. If you enable Joplin integration and grant optional local host access, it contacts the Web Clipper service at <strong>127.0.0.1</strong> on ports 41184–41194 to authorize, list notebooks and save the selected article, title and source URL. Joplin handles any further synchronization according to your Joplin settings.</p>
+<p>Requests to Habr include the requested URLs and may include your existing Habr session cookies so that personalized feeds work. Habr and, when downloading images locally, image hosting servers receive ordinary network request information such as your IP address. The Joplin token is sent only to the local Web Clipper service. Firefox declares website content, browsing activity and authentication information to describe these functional transfers; this does not mean that the developer receives your browsing history or credentials.</p>
 
 <h2>Permissions</h2>
 <ul>
@@ -43,7 +44,7 @@
 </ul>
 
 <h2>Third parties</h2>
-<p>No data is sold or shared with third parties. No data is used for creditworthiness, lending, advertising, or any purpose unrelated to the extension's single purpose.</p>
+<p>No data is sold. Functional requests go to Habr, image hosts when local image downloads are enabled, and optionally your local Joplin application as described above. No data is used by the extension for advertising or any purpose unrelated to saving Habr publications.</p>
 
 <h2>Changes</h2>
 <p>Any changes to this policy will be published on this page.</p>
