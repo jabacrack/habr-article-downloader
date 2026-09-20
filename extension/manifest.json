@@ -28,7 +28,22 @@
     "128": "icons/icon128.png"
   },
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background.js",
+    "scripts": [
+      "lib/dom-shim.js",
+      "lib/turndown.js",
+      "lib/turndown-plugin-gfm.js",
+      "utils/fetch-retry.js",
+      "utils/habr-api.js",
+      "utils/rss.js",
+      "utils/journal.js",
+      "utils/filename.js",
+      "markdown.js",
+      "parser.js",
+      "filters.js",
+      "habr-core.js",
+      "background.js"
+    ]
   },
   "content_scripts": [
     {

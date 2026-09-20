@@ -239,15 +239,16 @@ const HabrParser = (() => {
     if (!comments?.length) return '';
     let md = '\n\n---\n\n## Комментарии\n\n';
     comments.forEach((c) => {
-      const indent = '> '.repeat(Math.min(c.level || 0, 6));
+      const indent = '  '.repeat(c.level || 0);
+      const bodyIndent = `${indent}  `;
       const score = c.score != null ? ` · ${c.score > 0 ? '+' : ''}${c.score}` : '';
       const badge = c.isArticleAuthor ? ' · автор' : '';
       const time = c.time ? ` · ${String(c.time).slice(0, 16).replace('T', ' ')}` : '';
       const body = HabrMarkdown.fragmentToMarkdown(c.html)
         .split('\n')
-        .map((line) => `${indent}${line}`.trimEnd())
+        .map((line) => `${bodyIndent}${line}`.trimEnd())
         .join('\n');
-      md += `${indent}**${c.author}**${score}${badge}${time}\n${indent}\n${body}\n\n`;
+      md += `${indent}- **${c.author}**${score}${badge}${time}\n\n${body}\n\n`;
     });
     return md;
   }
