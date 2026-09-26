@@ -26,6 +26,7 @@ $zip = [System.IO.Compression.ZipArchive]::new($stream, [System.IO.Compression.Z
 try {
     foreach ($file in Get-ChildItem -LiteralPath $source -File -Recurse | Sort-Object FullName) {
         $relative = $file.FullName.Substring($source.Length + 1).Replace('\', '/')
+        if ($relative -match '(^|/)\.[^/]+(/|$)') { continue }
         if ($relative -in @('manifest.json', 'lib/dom-shim.js', 'icons/icon.svg')) { continue }
         [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zip, $file.FullName, $relative) | Out-Null
     }

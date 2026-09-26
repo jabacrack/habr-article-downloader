@@ -36,13 +36,21 @@ try {
     $snapshot = Join-Path $stage 'source'
     New-Item -ItemType Directory -Path $snapshot | Out-Null
     # Explicit allowlist: no .git, dist, downloaded articles or local settings.
-    foreach ($directory in @('extension', 'tests')) {
-        Copy-Item -LiteralPath (Join-Path $projectRoot $directory) -Destination $snapshot -Recurse
+    $extensionSource = Join-Path $projectRoot 'extension'
+    $extensionTarget = Join-Path $snapshot 'extension'
+    New-Item -ItemType Directory -Path $extensionTarget | Out-Null
+    foreach ($file in Get-ChildItem -LiteralPath $extensionSource -File -Recurse | Sort-Object FullName) {
+        $relative = $file.FullName.Substring($extensionSource.Length + 1).Replace('\', '/')
+        if ($relative -match '(^|/)\.[^/]+(/|$)') { continue }
+        $target = Join-Path $extensionTarget $relative
+        New-Item -ItemType Directory -Path (Split-Path -Parent $target) -Force | Out-Null
+        Copy-Item -LiteralPath $file.FullName -Destination $target
     }
+    Copy-Item -LiteralPath (Join-Path $projectRoot 'tests') -Destination $snapshot -Recurse
     foreach ($directory in @('scripts', 'docs')) {
         New-Item -ItemType Directory -Path (Join-Path $snapshot $directory) | Out-Null
     }
-    foreach ($file in @('LICENSE', 'README.md', 'scripts/package-firefox.ps1', 'scripts/prepare-firefox-release.ps1', 'docs/privacy-policy.html', 'docs/firefox-publishing.md')) {
+    foreach ($file in @('LICENSE', 'README.md', 'CHANGELOG.md', 'scripts/package-firefox.ps1', 'scripts/prepare-firefox-release.ps1', 'docs/privacy-policy.html', 'docs/firefox-publishing.md')) {
         Copy-Item -LiteralPath (Join-Path $projectRoot $file) -Destination (Join-Path $snapshot $file)
     }
     # Keep templates too, so the full preparation command works from sources.

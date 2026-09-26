@@ -2,7 +2,7 @@ Source/build information for {{NAME}}, version {{VERSION}}:
 
 We answered Yes to the build-tools question because scripts/package-firefox.ps1 processes manifest.json and generates the Firefox ZIP. Application JavaScript, HTML and CSS are copied unchanged. This packaging step does not minify, transpile or bundle application code and does not use template engines.
 
-The attached source archive includes the extension sources, packaging script, license, tests and BUILD-FIREFOX.md with full build instructions. On Windows with Windows PowerShell 5.1, extract the source archive and run from its root:
+The attached source archive includes the extension sources, packaging script, license, release history in CHANGELOG.md, tests and BUILD-FIREFOX.md with full build instructions. On Windows with Windows PowerShell 5.1, extract the source archive and run from its root:
 
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/package-firefox.ps1
 

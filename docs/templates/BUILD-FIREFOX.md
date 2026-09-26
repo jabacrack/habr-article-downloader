@@ -25,7 +25,7 @@ The script copies files from `extension/` into the ZIP without modifying their c
 - Adds the Gecko ID, minimum versions and data collection declarations.
 - Sets `incognito` to `not_allowed` because the download journal persists locally.
 
-The script excludes `lib/dom-shim.js` and `icons/icon.svg` from the package and includes the root `LICENSE`. No application JavaScript, HTML or CSS is generated, minified, transpiled or combined during this build. The readable Turndown and turndown-plugin-gfm files are included in `extension/lib/` and copied unchanged; rebuilding those libraries is not part of this packaging process. The Chrome-only DOM shim is included in this source snapshot for completeness but is not part of the Firefox output.
+The script excludes `lib/dom-shim.js`, `icons/icon.svg` and local dot-directories such as `.idea` from the package and includes the root `LICENSE`. No application JavaScript, HTML or CSS is generated, minified, transpiled or combined during this build. The readable Turndown and turndown-plugin-gfm files are included in `extension/lib/` and copied unchanged; rebuilding those libraries is not part of this packaging process. The Chrome-only DOM shim is included in this source snapshot for completeness but is not part of the Firefox output.
 
 ZIP timestamps and JSON object property order can differ between builds. Compare the extracted files byte-for-byte, with `manifest.json` compared as parsed JSON ignoring object key order. Array order must remain unchanged.
 
@@ -41,4 +41,4 @@ Node.js is only needed for tests, not for building the package. Test files are n
 
 ## Manual review
 
-Load the built ZIP as a temporary add-on using Firefox `about:debugging`. Test downloading a public Habr article, batch downloads and the watch settings. Optional Joplin support requires Joplin Desktop with Web Clipper enabled and authorization approved in Joplin. See `docs/amo-reviewer-notes.txt` for details.
+Load the built ZIP as a temporary add-on using Firefox `about:debugging`. Open the extension popup and grant access to `habr.com` if it reports that access is missing; temporary installation may not show a permission prompt. Test downloading a public Habr article, batch downloads and the watch settings. Optional Joplin support requires Joplin Desktop with Web Clipper enabled and authorization approved in Joplin. See `docs/amo-reviewer-notes.txt` for details.

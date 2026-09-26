@@ -1,12 +1,12 @@
-Source/build information for Habr Article Downloader (with Joplin support), version 3.5.0:
+Source/build information for Habr Article Downloader (with Joplin support), version 3.4.1.3:
 
 We answered Yes to the build-tools question because scripts/package-firefox.ps1 processes manifest.json and generates the Firefox ZIP. Application JavaScript, HTML and CSS are copied unchanged. This packaging step does not minify, transpile or bundle application code and does not use template engines.
 
-The attached source archive includes the extension sources, packaging script, license, tests and BUILD-FIREFOX.md with full build instructions. On Windows with Windows PowerShell 5.1, extract the source archive and run from its root:
+The attached source archive includes the extension sources, packaging script, license, release history in CHANGELOG.md, tests and BUILD-FIREFOX.md with full build instructions. On Windows with Windows PowerShell 5.1, extract the source archive and run from its root:
 
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/package-firefox.ps1
 
-No dependency installation or network access is required. The result is dist/habr-article-downloader-3.5.0-firefox.zip. ZIP timestamps and JSON object key order may differ; extracted payload files and parsed manifest contents reproduce the submitted package.
+No dependency installation or network access is required. The result is dist/habr-article-downloader-3.4.1.3-firefox.zip. ZIP timestamps and JSON object key order may differ; extracted payload files and parsed manifest contents reproduce the submitted package.
 
 Firefox uses an event page and native DOMParser. The Chrome-only DOM shim is excluded from the Firefox package. Readable Turndown and turndown-plugin-gfm files are bundled locally and copied unchanged. No remote executable code, telemetry or developer backend is used.
 

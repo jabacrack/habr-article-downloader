@@ -399,6 +399,11 @@ if (typeof browser !== 'undefined' && browser.runtime?.id) {
     for (const mutation of mutations) {
       if (isOurNode(mutation.target)) continue;
 
+      for (const node of mutation.removedNodes) {
+        if (node.nodeType !== 1) continue;
+        if (node.matches?.('.habr-md-btn') || node.querySelector?.('.habr-md-btn')) return true;
+      }
+
       for (const node of mutation.addedNodes) {
         if (node.nodeType !== 1 || isOurNode(node)) continue;
         if (node.matches?.('.tm-articles-list__item, .tm-article-presenter, .tm-articles-list, .article-snippet')) {

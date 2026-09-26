@@ -143,3 +143,33 @@ test('article and feed buttons open the correct URL and disappear when disabled'
     assert.equal(doc.querySelector('.habr-joplin-panel'), null);
   }
 });
+
+test('restores article buttons after the page replaces injected children', async () => {
+  const context = vm.createContext({ URL, console, setTimeout, clearTimeout,
+    location: { origin: 'https://habr.com', pathname: '/ru/articles/123/', href: 'https://habr.com/ru/articles/123/' },
+    history: { pushState() {}, replaceState() {} },
+    chrome: {
+      storage: { local: { async get() { return { showFloatingButton: true }; } },
+        onChanged: { addListener() {} } },
+      runtime: { getURL: file => `chrome-extension://test/${file}`, onMessage: { addListener() {} } },
+    },
+  });
+  vm.runInContext(read('lib/dom-shim.js'), context);
+  const doc = vm.runInContext('new DOMParser()', context).parseFromString(
+    '<html><body><div class="tm-article-presenter"><div class="tm-article-presenter__snippet"></div></div></body></html>',
+    'text/html',
+  );
+  context.document = doc;
+  context.window = doc.defaultView;
+  context.MutationObserver = doc.defaultView.MutationObserver;
+  vm.runInContext(read('content.js'), context);
+  await flush();
+
+  const host = doc.querySelector('.tm-article-presenter__snippet');
+  assert.equal(host.querySelectorAll('.habr-md-btn').length, 2);
+  host.querySelectorAll('.habr-md-btn').forEach(button => button.remove());
+  assert.equal(host.querySelectorAll('.habr-md-btn').length, 0);
+
+  await new Promise(resolve => setTimeout(resolve, 500));
+  assert.equal(host.querySelectorAll('.habr-md-btn').length, 2);
+});
